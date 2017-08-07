@@ -1,14 +1,24 @@
 const gulp = require('gulp');
-const babel = require('gulp-babel');
 const uglify = require('gulp-uglify');
 const sass = require('gulp-sass');
 const cssmin = require('gulp-cssmin');
 const del = require('del');
+const tap = require('gulp-tap');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const buffer = require('vinyl-buffer');
+const rename = require('gulp-rename');
 
 gulp.task('javascript', () => {
-    del('dist/js').then(() => gulp.src('src/js/gh-comments.js')
-        .pipe(babel({presets: ['es2015']})).on('error', logAndEmit)
+    del('dist/js').then(() => gulp.src('src/js/index.js')
+        .pipe(tap((file) => {
+            file.contents = browserify(file.path, {})
+                .transform(babelify, {presets: ['es2015']})
+                .bundle();
+            })).on('error', logAndEmit)
+        .pipe(buffer()).on('error', logAndEmit)
         .pipe(uglify()).on('error', logAndEmit)
+        .pipe(rename('gh-comments.js')).on('error', logAndEmit)
         .pipe(gulp.dest('dist/js'))
     );
 });
